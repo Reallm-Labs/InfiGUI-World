@@ -3,12 +3,12 @@ import uuid
 import argparse
 import signal
 import sys
-from coordinator import Coordinator
+from api.coordinator import Coordinator
+from environment.android_env import AndroidEnvironment
 from worker.env_worker import EnvironmentWorker
 from worker.nginx_worker import NginxWorker
 from worker.reward_worker import RewardWorker
-from environment.android_env import AndroidEnvironment
-from api_server import ApiServer
+from api.api_server import ApiServer
 from utils.logging import setup_logger
 from utils.config import load_config, get_default_config
 

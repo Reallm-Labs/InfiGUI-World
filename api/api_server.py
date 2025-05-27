@@ -1,8 +1,10 @@
 import json
+import logging
 import threading
 from flask import Flask, request, jsonify
-from coordinator import Coordinator
+from environment.android_env import AndroidEnvironment
 from utils.logging import setup_logger
+from .coordinator import Coordinator
 
 logger = setup_logger()
 

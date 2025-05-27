@@ -30,6 +30,9 @@ run_test() {
     echo -e "${BLUE}📝 Description: $test_description${NC}"
     echo -e "${BLUE}================================================${NC}"
     
+    # Set PYTHONPATH to include current directory for imports
+    export PYTHONPATH="${PWD}:${PYTHONPATH}"
+    
     if python3 "$test_script"; then
         echo -e "${GREEN}✅ $test_name: PASSED${NC}"
         test_results+=("PASSED")
@@ -96,9 +99,9 @@ fi
 
 # Check if test files exist
 test_files=(
-    "test_android_real_tasks.py"
-    "test_android_messaging.py"
-    "test_adb.py"
+    "tests/test_android_real_tasks.py"
+    "tests/test_android_messaging.py"
+    "tests/test_adb.py"
 )
 
 for file in "${test_files[@]}"; do
@@ -117,20 +120,23 @@ echo -e "${GREEN}✅ All pre-flight checks passed${NC}"
 
 # Option to run specific test
 if [ $# -eq 1 ]; then
+    # Set PYTHONPATH to include current directory for imports
+    export PYTHONPATH="${PWD}:${PYTHONPATH}"
+    
     case "$1" in
         "adb")
             echo "🔧 Running ADB connectivity test only..."
-            python3 test_adb.py
+            python3 tests/test_adb.py
             exit $?
             ;;
         "basic")
             echo "📱 Running basic Android tasks test only..."
-            python3 test_android_real_tasks.py
+            python3 tests/test_android_real_tasks.py
             exit $?
             ;;
         "messaging")
             echo "💬 Running messaging test only..."
-            python3 test_android_messaging.py
+            python3 tests/test_android_messaging.py
             exit $?
             ;;
         "help"|"-h"|"--help")
@@ -158,13 +164,13 @@ echo "⏰ This may take 10-20 minutes depending on emulator startup time."
 echo ""
 
 # Test 1: ADB Connectivity
-run_test "ADB Connectivity" "test_adb.py" "Basic ADB connection and device detection"
+run_test "ADB Connectivity" "tests/test_adb.py" "Basic ADB connection and device detection"
 
 # Test 2: Basic Android Tasks
-run_test "Basic Android Tasks" "test_android_real_tasks.py" "Comprehensive Android UI automation tests"
+run_test "Basic Android Tasks" "tests/test_android_real_tasks.py" "Comprehensive Android UI automation tests"
 
 # Test 3: Messaging and Communication
-run_test "Messaging & Communication" "test_android_messaging.py" "Phone calls, SMS, and contact management"
+run_test "Messaging & Communication" "tests/test_android_messaging.py" "Phone calls, SMS, and contact management"
 
 # Print final summary
 echo ""

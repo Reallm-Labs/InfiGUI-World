@@ -47,7 +47,7 @@ pip install -r requirements.txt
 Experience the framework with a built-in demonstration:
 
 ```bash
-bash run_android.sh
+bash scripts/run_android.sh
 ```
 
 Or run the Python demo directly:
@@ -143,8 +143,8 @@ The framework supports various interaction commands:
 ### Core Components
 
 - **`main.py`** - Entry point supporting multiple operation modes
-- **`coordinator.py`** - Central coordinator for worker management
-- **`api_server.py`** - HTTP API server with Flask
+- **`api/coordinator.py`** - Central coordinator for worker management
+- **`api/api_server.py`** - HTTP API server with Flask
 - **`environment/android_env.py`** - Android emulator environment implementation
 - **`worker/`** - Worker implementations for distributed processing
   - `env_worker.py` - Environment interaction worker
@@ -177,23 +177,23 @@ The framework uses `config.json` for configuration:
 Execute the comprehensive test suite:
 
 ```bash
-bash run_android_tests.sh
+bash scripts/run_android_tests.sh
 ```
 
 Or run specific test files:
 
 ```bash
-python3 test_android_real_tasks.py
-python3 test_android_messaging.py
-python3 test_adb.py
+python3 tests/test_android_real_tasks.py
+python3 tests/test_android_messaging.py
+python3 tests/test_adb.py
 ```
 
 ## 🔬 API Demo
 
-The `rollout_api_demo.py` script demonstrates programmatic interaction with the API:
+The `api/rollout_api_demo.py` script demonstrates programmatic interaction with the API:
 
 ```bash
-python3 rollout_api_demo.py
+python3 api/rollout_api_demo.py
 ```
 
 This demo shows:
