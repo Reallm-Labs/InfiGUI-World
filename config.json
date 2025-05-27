@@ -1,0 +1,28 @@
+{
+  "max_workers": 5,
+  "port": 5000,
+  "environment": {
+    "android": {
+      "snapshot_dir": "/tmp/android_snapshots",
+      "adb_path": "/root/.local/share/enroot/android-emulator/opt/android-sdk/platform-tools/adb",
+      "emulator_path": "/root/.local/share/enroot/android-emulator/opt/android-sdk/emulator/emulator",
+      "avd_name": "Pixel6_API33",
+      "boot_timeout": 120,
+      "dump_ui_timeout": 5,
+      "base_port": 5554,
+      "debug": true,
+      "no_window": true,
+      "no_audio": true,
+      "no_boot_anim": true
+    }
+  },
+  "worker": {
+    "env": {
+      "timeout": 30,
+      "max_trajectories": 5
+    },
+    "reward": {
+      "cache_size": 1000
+    }
+  }
+} 

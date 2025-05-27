@@ -1,0 +1,265 @@
+2025-05-27 00:26:47,520 - utils.logging - INFO - Initialized AndroidEnvironment
+2025-05-27 00:26:47,520 - utils.logging - INFO - Using alternative emulator path: emulator
+2025-05-27 00:26:47,524 - utils.logging - INFO - ADB 服务器已启动
+2025-05-27 00:26:47,524 - utils.logging - INFO - Android Environment initialized with snapshot dir: /tmp/android_snapshots
+2025-05-27 00:26:47,524 - utils.logging - INFO - Using Emulator path: emulator
+2025-05-27 00:26:47,524 - utils.logging - INFO - Using ADB path: adb
+2025-05-27 00:26:47,524 - utils.logging - INFO - 启动 Android 模拟器，端口: 5554，AVD: Pixel6_API33
+2025-05-27 00:26:58,084 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 00:27:01,977 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key power'
+2025-05-27 00:27:04,801 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:27:06,855 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 800 500'
+2025-05-27 00:27:10,096 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:27:12,151 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 00:27:14,956 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:27:15,008 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key back'
+2025-05-27 00:27:27,872 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:27:28,931 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 00:27:31,680 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:27:32,734 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key recents'
+2025-05-27 00:27:35,520 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:27:37,581 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1200 540 800 300'
+2025-05-27 00:27:40,643 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:27:41,697 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 900 300'
+2025-05-27 00:27:44,731 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:27:46,786 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1200'
+2025-05-27 00:27:49,615 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:27:52,669 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 00:27:55,758 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:27:55,812 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 00:27:58,640 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:28:00,695 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 900 300'
+2025-05-27 00:28:03,736 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:28:05,792 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1000'
+2025-05-27 00:28:08,572 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:28:11,629 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 1000'
+2025-05-27 00:28:14,417 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:28:15,475 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'text "Hello from Android automation test!"'
+2025-05-27 00:28:28,365 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:28:30,424 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 00:28:33,471 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:28:33,524 - utils.logging - INFO - 保存模拟器状态 8cbb00ef-1f64-4788-9625-7722f8adf9b0 到快照 sandbox_8cbb00ef
+2025-05-27 00:28:33,529 - utils.logging - INFO - 移除模拟器实例和快照 8cbb00ef-1f64-4788-9625-7722f8adf9b0
+2025-05-27 00:48:57,795 - utils.logging - INFO - Initialized AndroidEnvironment
+2025-05-27 00:48:57,795 - utils.logging - INFO - Using alternative emulator path: emulator
+2025-05-27 00:48:57,799 - utils.logging - INFO - ADB 服务器已启动
+2025-05-27 00:48:57,799 - utils.logging - INFO - Android Environment initialized with snapshot dir: /tmp/android_snapshots
+2025-05-27 00:48:57,799 - utils.logging - INFO - Using Emulator path: emulator
+2025-05-27 00:48:57,799 - utils.logging - INFO - Using ADB path: adb
+2025-05-27 00:48:57,799 - utils.logging - INFO - 启动 Android 模拟器，端口: 5554，AVD: Pixel6_API33
+2025-05-27 00:49:13,804 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 00:49:17,122 - utils.logging - INFO - 移除模拟器实例和快照 fe1973ce-a099-49d0-a9ed-315b69723b85
+2025-05-27 00:49:17,125 - utils.logging - INFO - 已停止模拟器 emulator-5554
+2025-05-27 00:49:49,892 - utils.logging - INFO - Initialized AndroidEnvironment
+2025-05-27 00:49:49,892 - utils.logging - INFO - Using alternative emulator path: emulator
+2025-05-27 00:49:49,895 - utils.logging - INFO - ADB 服务器已启动
+2025-05-27 00:49:49,896 - utils.logging - INFO - Android Environment initialized with snapshot dir: /tmp/android_snapshots
+2025-05-27 00:49:49,896 - utils.logging - INFO - Using Emulator path: emulator
+2025-05-27 00:49:49,896 - utils.logging - INFO - Using ADB path: adb
+2025-05-27 00:49:49,896 - utils.logging - INFO - 启动 Android 模拟器，端口: 5554，AVD: Pixel6_API33
+2025-05-27 00:50:00,446 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 00:50:03,846 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key power'
+2025-05-27 00:50:06,989 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:50:09,045 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 800 500'
+2025-05-27 00:50:12,260 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:50:14,315 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 00:50:17,067 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:50:17,121 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key back'
+2025-05-27 00:50:30,013 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:50:31,071 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 00:50:33,837 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:50:34,891 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key recents'
+2025-05-27 00:50:37,711 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:50:39,773 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1200 540 800 300'
+2025-05-27 00:50:42,864 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:50:43,917 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 900 300'
+2025-05-27 00:50:47,039 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:50:49,094 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1200'
+2025-05-27 00:50:51,908 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:50:54,964 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 00:50:58,028 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:50:58,081 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 00:51:00,840 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:51:02,895 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 900 300'
+2025-05-27 00:51:05,963 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:51:08,020 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1000'
+2025-05-27 00:51:10,799 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:51:13,857 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 1000'
+2025-05-27 00:51:16,671 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:51:17,729 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'text "Hello from Android automation test!"'
+2025-05-27 00:51:30,636 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:51:32,696 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 00:51:35,800 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 00:51:35,853 - utils.logging - INFO - 保存模拟器状态 dcae6b9d-d5eb-4c97-9e6b-df20f8115f10 到快照 sandbox_dcae6b9d
+2025-05-27 00:51:35,857 - utils.logging - INFO - 移除模拟器实例和快照 dcae6b9d-d5eb-4c97-9e6b-df20f8115f10
+2025-05-27 00:59:06,449 - utils.logging - INFO - Initialized AndroidEnvironment
+2025-05-27 00:59:06,449 - utils.logging - INFO - Using alternative emulator path: emulator
+2025-05-27 00:59:06,452 - utils.logging - INFO - ADB 服务器已启动
+2025-05-27 00:59:06,452 - utils.logging - INFO - Android Environment initialized with snapshot dir: /tmp/android_snapshots
+2025-05-27 00:59:06,452 - utils.logging - INFO - Using Emulator path: emulator
+2025-05-27 00:59:06,452 - utils.logging - INFO - Using ADB path: adb
+2025-05-27 00:59:06,452 - utils.logging - INFO - 启动 Android 模拟器，端口: 5554，AVD: Pixel6_API33
+2025-05-27 00:59:21,861 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 00:59:30,085 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 00:59:33,970 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 00:59:42,072 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 00:59:45,992 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 00:59:54,088 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 00:59:58,015 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:00:06,226 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 01:00:10,143 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:00:15,307 - utils.logging - INFO - 移除模拟器实例和快照 09e5211f-34a2-4fb6-8c6c-25a20e8485ea
+2025-05-27 01:00:15,312 - utils.logging - INFO - 已停止模拟器 emulator-5554
+2025-05-27 01:00:40,496 - utils.logging - INFO - Initialized AndroidEnvironment
+2025-05-27 01:00:40,496 - utils.logging - INFO - Using alternative emulator path: emulator
+2025-05-27 01:00:40,500 - utils.logging - INFO - ADB 服务器已启动
+2025-05-27 01:00:40,500 - utils.logging - INFO - Android Environment initialized with snapshot dir: /tmp/android_snapshots
+2025-05-27 01:00:40,500 - utils.logging - INFO - Using Emulator path: emulator
+2025-05-27 01:00:40,500 - utils.logging - INFO - Using ADB path: adb
+2025-05-27 01:00:40,500 - utils.logging - INFO - 启动 Android 模拟器，端口: 5554，AVD: Pixel6_API33
+2025-05-27 01:00:51,515 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:00:55,803 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key power'
+2025-05-27 01:00:58,936 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:01:00,993 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 800 500'
+2025-05-27 01:01:04,184 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:01:06,240 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 01:01:09,084 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:01:09,138 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key back'
+2025-05-27 01:01:21,986 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:01:23,048 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 01:01:25,861 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:01:26,917 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key recents'
+2025-05-27 01:01:29,688 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:01:31,749 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1200 540 800 300'
+2025-05-27 01:01:34,796 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:01:35,850 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 900 300'
+2025-05-27 01:01:38,948 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:01:41,003 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1200'
+2025-05-27 01:01:43,792 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:01:46,848 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:01:52,071 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 01:01:57,011 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 900 300'
+2025-05-27 01:02:02,805 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1000'
+2025-05-27 01:02:07,607 - utils.logging - INFO - 保存模拟器状态 55e170aa-62d3-426e-9a2a-57d412af2f5b 到快照 sandbox_55e170aa
+2025-05-27 01:02:07,612 - utils.logging - INFO - 移除模拟器实例和快照 55e170aa-62d3-426e-9a2a-57d412af2f5b
+2025-05-27 01:10:30,988 - utils.logging - INFO - Initialized AndroidEnvironment
+2025-05-27 01:10:30,988 - utils.logging - INFO - Using alternative emulator path: emulator
+2025-05-27 01:10:30,992 - utils.logging - INFO - ADB 服务器已启动
+2025-05-27 01:10:30,992 - utils.logging - INFO - Android Environment initialized with snapshot dir: /tmp/android_snapshots
+2025-05-27 01:10:30,992 - utils.logging - INFO - Using Emulator path: emulator
+2025-05-27 01:10:30,992 - utils.logging - INFO - Using ADB path: adb
+2025-05-27 01:10:30,992 - utils.logging - INFO - 启动 Android 模拟器，端口: 5554，AVD: Pixel6_API33
+2025-05-27 01:10:41,557 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:10:45,929 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key power'
+2025-05-27 01:10:49,106 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:10:51,162 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 800 500'
+2025-05-27 01:10:54,355 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:10:56,413 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 01:10:59,195 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:10:59,249 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key back'
+2025-05-27 01:11:12,104 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:11:13,161 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 01:11:15,943 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:11:16,997 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key recents'
+2025-05-27 01:11:19,808 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:11:21,868 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1200 540 800 300'
+2025-05-27 01:11:24,951 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:11:26,005 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 900 300'
+2025-05-27 01:11:29,076 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:11:31,130 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1200'
+2025-05-27 01:11:33,936 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:11:36,991 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:11:42,171 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 01:11:47,004 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 900 300'
+2025-05-27 01:11:52,739 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1000'
+2025-05-27 01:11:58,668 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 1000'
+2025-05-27 01:12:02,569 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'text "Hello from Android automation test!"'
+2025-05-27 01:12:08,806 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:12:13,628 - utils.logging - INFO - 保存模拟器状态 ac344df7-4f98-4873-a650-f31175847d52 到快照 sandbox_ac344df7
+2025-05-27 01:12:13,632 - utils.logging - INFO - 移除模拟器实例和快照 ac344df7-4f98-4873-a650-f31175847d52
+2025-05-27 01:12:31,944 - utils.logging - INFO - Initialized AndroidEnvironment
+2025-05-27 01:12:31,944 - utils.logging - INFO - Using alternative emulator path: emulator
+2025-05-27 01:12:31,948 - utils.logging - INFO - ADB 服务器已启动
+2025-05-27 01:12:31,948 - utils.logging - INFO - Android Environment initialized with snapshot dir: /tmp/android_snapshots
+2025-05-27 01:12:31,948 - utils.logging - INFO - Using Emulator path: emulator
+2025-05-27 01:12:31,948 - utils.logging - INFO - Using ADB path: adb
+2025-05-27 01:12:31,948 - utils.logging - INFO - 启动 Android 模拟器，端口: 5554，AVD: Pixel6_API33
+2025-05-27 01:12:47,486 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key power'
+2025-05-27 01:12:50,258 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:12:52,316 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 800 500'
+2025-05-27 01:12:55,564 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:12:57,621 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'key home'
+2025-05-27 01:13:00,396 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:13:02,452 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 900 300'
+2025-05-27 01:13:05,547 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:13:07,604 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1000'
+2025-05-27 01:13:10,379 - utils.logging - WARNING - UI转储文件不存在，尝试备用方法
+2025-05-27 01:13:12,436 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:13:17,667 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 1000'
+2025-05-27 01:13:22,600 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:13:27,509 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 810 1000'
+2025-05-27 01:13:32,439 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:13:37,486 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1200'
+2025-05-27 01:13:42,450 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:13:47,435 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 1200'
+2025-05-27 01:13:52,367 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:13:57,341 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 810 1200'
+2025-05-27 01:14:02,248 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:14:07,190 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1400'
+2025-05-27 01:14:12,096 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:14:17,048 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 1400'
+2025-05-27 01:14:21,935 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:14:26,824 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 810 1400'
+2025-05-27 01:14:31,805 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:14:36,753 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1800'
+2025-05-27 01:14:44,698 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:14:49,691 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:14:54,590 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:14:59,455 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'text "123-456-7890"'
+2025-05-27 01:15:04,793 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:15:09,719 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 900 300'
+2025-05-27 01:15:14,942 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1000'
+2025-05-27 01:15:19,833 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:15:24,595 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 1000'
+2025-05-27 01:15:29,524 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:15:34,365 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 810 1000'
+2025-05-27 01:15:39,259 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:15:44,175 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1200'
+2025-05-27 01:15:49,106 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:15:53,813 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 1200'
+2025-05-27 01:15:58,695 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:16:03,330 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 810 1200'
+2025-05-27 01:16:08,238 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:16:13,079 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1400'
+2025-05-27 01:16:18,004 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:16:22,772 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 1400'
+2025-05-27 01:16:27,666 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:16:32,329 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 810 1400'
+2025-05-27 01:16:37,230 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:16:41,919 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1800'
+2025-05-27 01:16:49,823 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:16:54,555 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:16:59,453 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:17:04,187 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:17:08,815 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 920 1600'
+2025-05-27 01:17:13,708 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:17:18,491 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 400'
+2025-05-27 01:17:22,386 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'text "123-456-7890"'
+2025-05-27 01:17:26,837 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 800'
+2025-05-27 01:17:30,737 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'text "Hello from Android automation test!"'
+2025-05-27 01:17:35,805 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:17:40,491 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'swipe 540 1800 540 900 300'
+2025-05-27 01:17:45,620 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1000'
+2025-05-27 01:17:50,530 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:17:55,337 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 1000'
+2025-05-27 01:18:00,257 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:18:04,888 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 810 1000'
+2025-05-27 01:18:09,801 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:18:14,531 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 270 1200'
+2025-05-27 01:18:19,462 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:18:24,127 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 540 1200'
+2025-05-27 01:18:29,031 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:18:33,731 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'click 810 1200'
+2025-05-27 01:18:38,664 - utils.logging - INFO - 在模拟器 emulator-5554 中执行动作 'screenshot'
+2025-05-27 01:18:41,203 - utils.logging - INFO - 保存模拟器状态 42972af9-4b23-4caa-9333-9ba71cd39127 到快照 sandbox_42972af9
+2025-05-27 01:18:41,208 - utils.logging - INFO - 移除模拟器实例和快照 42972af9-4b23-4caa-9333-9ba71cd39127
