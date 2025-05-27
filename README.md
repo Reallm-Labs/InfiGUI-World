@@ -1,99 +1,284 @@
-# Android 沙盒环境
+# InfiGUI-World
 
-这个项目提供了一个用于控制 Android 模拟器的沙盒环境，可以通过编程方式创建、控制和管理 Android 模拟器实例。
+A comprehensive framework for Android emulator automation and GUI interaction, designed for agentic environments and autonomous GUI testing. This project provides a scalable sandbox environment for controlling Android emulators programmatically with support for screenshots, UI hierarchy analysis, and reward-based evaluation.
 
-## 功能特性
+## 🚀 Features
 
-- 创建和管理多个 Android 模拟器实例
-- 通过 ADB 控制模拟器（点击、滑动、输入文本等）
-- 获取屏幕截图和 UI 层次结构
-- 保存和加载模拟器状态（快照）
-- 提供 RESTful API 接口
+- **Multi-Emulator Management**: Create and manage multiple Android emulator instances concurrently
+- **ADB Integration**: Full ADB support for device control (clicks, swipes, text input, key events)
+- **Visual Monitoring**: Capture screenshots and analyze UI hierarchy structure
+- **State Management**: Save and restore emulator snapshots for reproducible testing
+- **RESTful API**: Complete HTTP API for remote control and automation
+- **Reward System**: Built-in reward calculation for reinforcement learning scenarios
+- **Worker Architecture**: Distributed worker system for scalable operations
+- **Trajectory Management**: Track and manage interaction sequences with unique trajectory IDs
 
-## 环境要求
+## 📋 Requirements
 
-- Linux 操作系统
-- Python 3.6+
-- Android SDK 工具（ADB、模拟器等）
+- **Linux Operating System** (tested on Ubuntu)
+- **Python 3.6+**
+- **Android SDK Tools** (ADB, Emulator)
+- **Java 11+** (for Android SDK)
 
-## 安装
+## 🛠️ Installation
 
-1. 安装 Android SDK 依赖项：
+### 1. Install Android SDK Dependencies
 
 ```bash
 sudo bash scripts/install_android_deps.sh
 ```
 
-2. 安装 Python 依赖项：
+This script will:
+- Install required system packages (Java 11, graphics libraries)
+- Download and setup Android SDK command-line tools
+- Install platform tools, emulator, and system images
+- Create a default Pixel 6 API 33 AVD
+
+### 2. Install Python Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## 使用方法
+## 🎯 Quick Start
 
-### 启动演示
+### Run Demo
 
-```bash
-bash run_demo.sh
-```
-
-### 启动 API 服务器
+Experience the framework with a built-in demonstration:
 
 ```bash
-python3 -m main --mode api --host 0.0.0.0 --port 5000
+bash run_android.sh
 ```
 
-### 通过 API 控制模拟器
+Or run the Python demo directly:
 
-1. 创建模拟器实例：
+```bash
+python3 main.py --mode demo
+```
 
+### Start API Server
+
+Launch the HTTP API server for remote control:
+
+```bash
+python3 main.py --mode api --host 0.0.0.0 --port 5000
+```
+
+## 📡 API Usage
+
+### Environment Management
+
+**Create Environment Instance:**
 ```bash
 curl -X POST http://localhost:5000/api/env/create
 ```
 
-2. 在模拟器上执行操作：
-
+**Execute Actions:**
 ```bash
 curl -X POST http://localhost:5000/api/env/step \
   -H "Content-Type: application/json" \
-  -d '{"trajectory_id": "YOUR_TRAJECTORY_ID", "command": "click 500 500"}'
+  -d '{
+    "trajectory_id": "YOUR_TRAJECTORY_ID",
+    "command": "click 500 500"
+  }'
 ```
 
-3. 保存模拟器状态：
-
+**Save Environment State:**
 ```bash
 curl -X POST http://localhost:5000/api/env/save \
   -H "Content-Type: application/json" \
-  -d '{"trajectory_id": "YOUR_TRAJECTORY_ID"}'
+  -d '{
+    "trajectory_id": "YOUR_TRAJECTORY_ID"
+  }'
 ```
 
-### 运行基于 API 的 Rollout 演示
+**Load Environment State:**
+```bash
+curl -X POST http://localhost:5000/api/env/load \
+  -H "Content-Type: application/json" \
+  -d '{
+    "trajectory_id": "YOUR_TRAJECTORY_ID"
+  }'
+```
 
-`rollout_api_demo.py` 脚本提供了一个示例，展示如何通过 HTTP API 以编程方式与 Android 环境和奖励计算服务进行交互。这模拟了一个简单的 rollout worker。
+**Remove Environment:**
+```bash
+curl -X POST http://localhost:5000/api/env/remove \
+  -H "Content-Type: application/json" \
+  -d '{
+    "trajectory_id": "YOUR_TRAJECTORY_ID"
+  }'
+```
 
-**前提条件：**
+### Reward Calculation
 
-1.  **安装 `requests` 库：**
-    ```bash
-    pip install requests
-    ```
-2.  **确保 API 服务器正在运行：** API 服务器必须以注册 `EnvironmentWorker`（用于 Android）和 `RewardWorker` 的模式启动。通常可以运行：
-    ```bash
-    python main.py --mode api --host 0.0.0.0 --port 5000 --env-type android
-    ```
-    （根据您的设置需要调整参数。）
+**Calculate Trajectory Reward:**
+```bash
+curl -X POST http://localhost:5000/api/reward/calculate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "trajectory_id": "YOUR_TRAJECTORY_ID",
+    "reward_type": "rule_based",
+    "trajectory_data": {
+      "actions": ["click 100 200", "swipe 100 200 300 400"],
+      "states": [...],
+      "success": true
+    }
+  }'
+```
 
-**运行演示：**
+## 🎮 Supported Commands
 
-一旦 API 服务器运行，执行演示脚本：
+The framework supports various interaction commands:
+
+- **`click x y`** - Tap at coordinates (x, y)
+- **`swipe x1 y1 x2 y2`** - Swipe from (x1, y1) to (x2, y2)
+- **`text "message"`** - Input text string
+- **`key <keyname>`** - Press key (back, home, menu, etc.)
+- **`screenshot`** - Capture current screen
+- **`scroll up|down|left|right`** - Scroll in specified direction
+
+## 🏗️ Architecture
+
+### Core Components
+
+- **`main.py`** - Entry point supporting multiple operation modes
+- **`coordinator.py`** - Central coordinator for worker management
+- **`api_server.py`** - HTTP API server with Flask
+- **`environment/android_env.py`** - Android emulator environment implementation
+- **`worker/`** - Worker implementations for distributed processing
+  - `env_worker.py` - Environment interaction worker
+  - `reward_worker.py` - Reward calculation worker
+  - `nginx_worker.py` - Nginx worker for load balancing
+
+### Configuration
+
+The framework uses `config.json` for configuration:
+
+```json
+{
+  "max_workers": 5,
+  "port": 5000,
+  "environment": {
+    "android": {
+      "snapshot_dir": "/tmp/android_snapshots",
+      "adb_path": "/path/to/adb",
+      "emulator_path": "/path/to/emulator",
+      "avd_name": "Pixel6_API33",
+      "boot_timeout": 120,
+      "base_port": 5554
+    }
+  }
+}
+```
+
+## 🧪 Running Tests
+
+Execute the comprehensive test suite:
+
+```bash
+bash run_android_tests.sh
+```
+
+Or run specific test files:
+
+```bash
+python3 test_android_real_tasks.py
+python3 test_android_messaging.py
+python3 test_adb.py
+```
+
+## 🔬 API Demo
+
+The `rollout_api_demo.py` script demonstrates programmatic interaction with the API:
 
 ```bash
 python3 rollout_api_demo.py
 ```
 
-该脚本将输出它执行的步骤，包括创建环境、执行操作、保存状态、计算奖励，最后移除环境。
+This demo shows:
+1. Environment creation
+2. Action execution
+3. State saving
+4. Reward calculation
+5. Environment cleanup
 
-## 支持的命令
+## 🚀 Advanced Usage
 
-- `click x y`
+### Multiple Operation Modes
+
+- **`coordinator`** - Run as central coordinator
+- **`worker`** - Run as distributed worker
+- **`api`** - Run API server with integrated workers
+- **`demo`** - Run interactive demonstration
+
+### Worker Types
+
+- **`env`** - Environment interaction worker
+- **`nginx`** - Load balancing worker
+- **`reward`** - Reward calculation worker
+
+### Example Commands
+
+```bash
+# Run as coordinator only
+python3 main.py --mode coordinator
+
+# Run as environment worker
+python3 main.py --mode worker --worker-type env --env-type android
+
+# Run API server with custom configuration
+python3 main.py --mode api --config custom_config.json --host 0.0.0.0 --port 8080
+```
+
+## 🔧 Development
+
+### Project Structure
+
+```
+InfiGUI-World/
+├── main.py                    # Main entry point
+├── config.json               # Configuration file
+├── api_server.py             # HTTP API server
+├── coordinator.py            # Worker coordinator
+├── environment/              # Environment implementations
+│   ├── android_env.py        # Android environment
+│   └── base.py              # Base environment class
+├── worker/                   # Worker implementations
+│   ├── env_worker.py        # Environment worker
+│   ├── reward_worker.py     # Reward worker
+│   └── nginx_worker.py      # Nginx worker
+├── scripts/                  # Installation and setup scripts
+├── utils/                    # Utility modules
+└── tests/                    # Test files
+```
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🤝 Support
+
+For questions, issues, or contributions, please:
+
+1. Check existing GitHub issues
+2. Create a new issue with detailed description
+3. Join our community discussions
+
+## 🔗 Related Projects
+
+- [Android SDK](https://developer.android.com/studio/command-line)
+- [ADB Documentation](https://developer.android.com/studio/command-line/adb)
+- [Flask API Framework](https://flask.palletsprojects.com/)
+
+---
+
+**InfiGUI-World** - Empowering autonomous GUI interaction through intelligent automation frameworks.
