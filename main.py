@@ -18,7 +18,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Agentic Environment Framework')
     parser.add_argument('--mode', type=str, default='demo', help='运行模式: coordinator, worker, demo, api')
     parser.add_argument('--worker-type', type=str, default='env', help='Worker类型: env, nginx, reward')
-    parser.add_argument('--env-type', type=str, default='android', help='环境类型: android, code_sandbox')
+    parser.add_argument('--env-type', type=str, default='android', help='环境类型: android, android_world')
     parser.add_argument('--config', type=str, default='config.json', help='配置文件路径')
     parser.add_argument('--host', type=str, default='localhost', help='API服务器主机')
     parser.add_argument('--port', type=int, default=5000, help='API服务器端口')
@@ -53,6 +53,13 @@ def main():
                 # 使用配置中的 Android 环境参数（如果存在）
                 android_config = config.get('environment', {}).get('android', {})
                 env = AndroidEnvironment(android_config)
+            elif args.env_type in ('android_world', 'aw'):
+                from environment.android_world_wrapper import AndroidWorldAsyncEnvironment
+                aw_config = config.get('environment', {}).get('android_world', {})
+                env = AndroidWorldAsyncEnvironment(aw_config)
+            else:
+                logger.error(f"不支持的环境类型: {args.env_type}")
+                return
             worker = EnvironmentWorker(config, env)
         elif args.worker_type == 'nginx':
             worker = NginxWorker(config)
@@ -79,6 +86,13 @@ def main():
             # 使用配置中的 Android 环境参数（如果存在）
             android_config = config.get('environment', {}).get('android', {})
             env = AndroidEnvironment(android_config)
+        elif args.env_type in ('android_world', 'aw'):
+            from environment.android_world_wrapper import AndroidWorldAsyncEnvironment
+            aw_config = config.get('environment', {}).get('android_world', {})
+            env = AndroidWorldAsyncEnvironment(aw_config)
+        else:
+            logger.error(f"不支持的环境类型: {args.env_type}")
+            return
         
         env_worker = EnvironmentWorker(config, env)
         reward_worker = RewardWorker(config)

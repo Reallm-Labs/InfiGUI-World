@@ -9,6 +9,11 @@ import shutil
 from typing import Dict, Any, Optional, List, Tuple
 from environment.base import Environment
 from utils.logging import setup_logger
+import dataclasses
+from android_world.env import representation_utils as aw_repr
+from android_world.env import json_action as aw_json
+from environment.action_utils import to_json_action
+from android_world.env import adb_utils as aw_adb_utils  # type: ignore
 
 logger = setup_logger()
 
@@ -369,27 +374,14 @@ class AndroidEnvironment(Environment):
         return None
     
     def _parse_ui_elements(self, xml_data: str) -> List[Dict[str, Any]]:
-        """解析 UI 元素信息"""
-        if not xml_data:
+        """使用 android_world.env.representation_utils 将 UI 层次结构 XML 解析为元素列表"""
+        try:
+            elements = aw_repr.xml_dump_to_ui_elements(xml_data)
+            # 将 dataclass 转换为普通字典，方便后续 JSON 序列化
+            return [dataclasses.asdict(el) for el in elements]
+        except Exception as e:
+            logger.warning(f"解析 UI 元素失败: {e}")
             return []
-        
-        elements = []
-        
-        # 使用正则表达式匹配节点属性
-        # 这是一个简化的实现，实际上可能需要使用 XML 解析库
-        pattern = r'<node[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"[^>]*text="([^"]*)"[^>]*resource-id="([^"]*)"[^>]*class="([^"]*)"[^>]*'
-        matches = re.finditer(pattern, xml_data)
-        
-        for match in matches:
-            x1, y1, x2, y2, text, resource_id, class_name = match.groups()
-            elements.append({
-                'bounds': [int(x1), int(y1), int(x2), int(y2)],
-                'text': text,
-                'resource_id': resource_id,
-                'class': class_name
-            })
-        
-        return elements
     
     def _get_current_activity(self, device_id: str) -> Optional[str]:
         """获取当前活动"""
@@ -617,91 +609,233 @@ class AndroidEnvironment(Environment):
                 'error': str(e)
             }
     
-    def step(self, trajectory_id: str, action: str) -> Dict[str, Any]:
-        """在Android模拟器中执行动作"""
-        if trajectory_id not in self.active_emulators:
-            # 尝试加载现有快照
-            load_result = self.load(trajectory_id)
-            if not load_result['success']:
-                return load_result
-        
+    def _execute_json_action(self, device_id: str, ja: aw_json.JSONAction) -> Dict[str, Any]:
+        """执行来自 android_world JSONAction 的动作并返回 observation 结果字典。"""
         try:
+            action_type = ja.action_type
+            ### log info here
+            print('--------------------------------')
+            print('action_type:', action_type)
+            print('ja:', ja)
+            print('--------------------------------')
+            obs: Dict[str, Any] = {"action": action_type}
+
+            if action_type in {aw_json.CLICK, aw_json.DOUBLE_TAP, aw_json.LONG_PRESS}:
+                if ja.x is None or ja.y is None:
+                    raise ValueError("click/press 类动作需要提供 x、y 坐标")
+                x, y = int(ja.x), int(ja.y)
+                # DOUBLE_TAP/LONG_PRESS 仅通过两次 tap / 长按实现，简化处理
+                if action_type == aw_json.CLICK:
+                    self._execute_adb_command(device_id, "shell", "input", "tap", str(x), str(y))
+                elif action_type == aw_json.DOUBLE_TAP:
+                    self._execute_adb_command(device_id, "shell", "input", "tap", str(x), str(y))
+                    time.sleep(0.05)
+                    self._execute_adb_command(device_id, "shell", "input", "tap", str(x), str(y))
+                else:  # LONG_PRESS
+                    self._execute_adb_command(device_id, "shell", "input", "swipe", str(x), str(y), str(x), str(y), "800")
+                obs.update({"x": x, "y": y, "success": True})
+
+            elif action_type == aw_json.INPUT_TEXT:
+                if ja.text is None:
+                    raise ValueError("input_text 动作需要提供 text 字段")
+                text = ja.text
+                # shell input text 需要处理空格
+                safe_text = text.replace(" ", "%s")
+                self._execute_adb_command(device_id, "shell", "input", "text", safe_text)
+                obs.update({"text": text, "success": True})
+
+            elif action_type in {aw_json.NAVIGATE_BACK, aw_json.NAVIGATE_HOME, aw_json.KEYBOARD_ENTER}:
+                key_map = {
+                    aw_json.NAVIGATE_BACK: "KEYCODE_BACK",
+                    aw_json.NAVIGATE_HOME: "KEYCODE_HOME",
+                    aw_json.KEYBOARD_ENTER: "KEYCODE_ENTER",
+                }
+                key_code = key_map[action_type]
+                self._execute_adb_command(device_id, "shell", "input", "keyevent", key_code)
+                obs.update({"key": key_code, "success": True})
+
+            elif action_type in {aw_json.SCROLL, aw_json.SWIPE}:
+                # 根据方向生成滑动坐标，使用屏幕中心或边缘
+                if ja.direction is None:
+                    raise ValueError("scroll/swipe 需要 direction 字段")
+                direction = ja.direction.lower()
+                screen_w, screen_h = self._get_screen_size(device_id) or (1080, 1920)
+                mid_x, mid_y = screen_w // 2, screen_h // 2
+                if direction == "down":
+                    x1, y1, x2, y2 = mid_x, int(screen_h * 0.25), mid_x, int(screen_h * 0.75)
+                elif direction == "up":
+                    x1, y1, x2, y2 = mid_x, int(screen_h * 0.75), mid_x, int(screen_h * 0.25)
+                elif direction == "left":
+                    x1, y1, x2, y2 = int(screen_w * 0.75), mid_y, int(screen_w * 0.25), mid_y
+                elif direction == "right":
+                    x1, y1, x2, y2 = int(screen_w * 0.25), mid_y, int(screen_w * 0.75), mid_y
+                else:
+                    raise ValueError(f"未知方向: {ja.direction}")
+                self._execute_adb_command(device_id, "shell", "input", "swipe", str(x1), str(y1), str(x2), str(y2), "300")
+                obs.update({"direction": direction, "success": True})
+
+            elif action_type == aw_json.OPEN_APP:
+                # 打开应用：优先根据友好名称映射到 Activity；若找不到则把 app_name 当作包名处理。
+                if ja.app_name is None:
+                    raise ValueError("open_app 需要 app_name")
+
+                activity: str | None = None
+                activity = aw_adb_utils.get_adb_activity(ja.app_name)
+                if activity:
+                    # 找到匹配 Activity，使用 am start -n
+                    self._execute_adb_command(
+                        device_id,
+                        "shell",
+                        "am",
+                        "start",
+                        "-n",
+                        activity,
+                    )
+                else:
+                    # 回退：把 app_name 视为 package 名称，通过 monkey 简易启动
+                    self._execute_adb_command(
+                        device_id,
+                        "shell",
+                        "monkey",
+                        "-p",
+                        ja.app_name,
+                        "1",
+                    )
+
+                obs.update({"app_name": ja.app_name, "activity": activity, "success": True})
+
+            # ------------------------------------------------------------------
+            # Generic keycode press (press_keyboard) – leverage ja.keycode field
+            # ------------------------------------------------------------------
+            elif ja.keycode is not None:
+                # If a keycode is supplied, treat it as a single key event.
+                keycode = ja.keycode
+                self._execute_adb_command(device_id, "shell", "input", "keyevent", keycode)
+                obs.update({"keycode": keycode, "success": True})
+
+            # ------------------------------------------------------------------
+            # ANSWER – e.g. accept incoming phone call (KEYCODE_CALL)
+            # ------------------------------------------------------------------
+            elif action_type == aw_json.ANSWER:
+                self._execute_adb_command(device_id, "shell", "input", "keyevent", "KEYCODE_CALL")
+                obs.update({"success": True})
+
+            elif action_type == aw_json.WAIT:
+                duration = float(ja.text) if ja.text else 1.0
+                time.sleep(duration)
+                obs.update({"wait_seconds": duration, "success": True})
+
+            else:
+                raise ValueError(f"暂不支持的 JSONAction 类型: {action_type}")
+
+            return {"success": True, "observation": obs}
+        except Exception as e:
+            logger.error(f"执行 JSONAction 失败: {e}")
+            return {"success": False, "error": str(e)}
+
+    def step(self, trajectory_id: str, action: Any) -> Dict[str, Any]:
+        """在Android模拟器中执行动作
+        
+        兼容两种动作格式:
+        1. 字符串命令 (click 100 200 等)
+        2. JSONAction 字典 / JSON 字符串 (与 android_world.env.json_action 格式保持一致)
+        """
+        try:
+            # 若该 trajectory 对应的模拟器尚未激活，则尝试从快照加载
+            if trajectory_id not in self.active_emulators:
+                load_result = self.load(trajectory_id)
+                if not load_result.get("success", False):
+                    return load_result
+
             emulator_info = self.active_emulators[trajectory_id]
-            device_id = emulator_info['device_id']
-            
-            logger.info(f"在模拟器 {device_id} 中执行动作 '{action}'")
-            
-            # 解析动作命令
-            parts = action.split(' ')
+            device_id = emulator_info["device_id"]
+
+            # --------------------------------------------------
+            # 1) 优先尝试将动作解析为 JSONAction
+            # --------------------------------------------------
+            try:
+                ja = to_json_action(action)
+                return self._execute_json_action(device_id, ja)
+            except Exception as json_err:  # noqa: BLE001
+                logger.debug(f"to_json_action 解析失败，退回文本命令逻辑: {json_err}")
+
+            # --------------------------------------------------
+            # 2) 解析文本命令
+            # --------------------------------------------------
+            if not isinstance(action, str):
+                return {"success": False, "error": "动作格式无效，应为字符串或 JSONAction"}
+
+            parts = action.strip().split()
+            if not parts:
+                return {"success": False, "error": "空动作指令"}
+
             action_type = parts[0].lower()
-            
-            observation = {}
-            
-            if action_type == 'click':
+
+            # ---- click ----
+            if action_type == "click":
                 if len(parts) >= 3:
                     x, y = int(parts[1]), int(parts[2])
                     self._execute_adb_command(device_id, "shell", "input", "tap", str(x), str(y))
-                    observation = {'action': 'click', 'x': x, 'y': y, 'success': True}
+                    observation = {"action": "click", "x": x, "y": y, "success": True}
                 else:
-                    return {'success': False, 'error': '点击命令格式无效'}
-                
-            elif action_type == 'swipe':
+                    return {"success": False, "error": "点击命令格式无效，应为: click <x> <y>"}
+
+            # ---- swipe ----
+            elif action_type == "swipe":
                 if len(parts) >= 5:
-                    x1, y1, x2, y2 = int(parts[1]), int(parts[2]), int(parts[3]), int(parts[4])
-                    duration = parts[5] if len(parts) > 5 else "300"  # 默认滑动时间 300ms
+                    x1, y1, x2, y2 = map(int, parts[1:5])
+                    duration = parts[5] if len(parts) > 5 else "300"  # 默认 300ms
                     self._execute_adb_command(
-                        device_id, "shell", "input", "swipe", 
+                        device_id, "shell", "input", "swipe",
                         str(x1), str(y1), str(x2), str(y2), duration
                     )
-                    observation = {'action': 'swipe', 'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2, 'success': True}
+                    observation = {
+                        "action": "swipe",
+                        "x1": x1, "y1": y1, "x2": x2, "y2": y2,
+                        "duration": duration, "success": True,
+                    }
                 else:
-                    return {'success': False, 'error': '滑动命令格式无效'}
-                
-            elif action_type == 'text':
-                # 合并剩余部分作为文本
-                text = ' '.join(parts[1:])
-                # 移除可能的引号
+                    return {"success": False, "error": "滑动命令格式无效，应为: swipe <x1> <y1> <x2> <y2> [duration]"}
+
+            # ---- text ----
+            elif action_type == "text":
+                text = " ".join(parts[1:])
                 if text.startswith('"') and text.endswith('"'):
                     text = text[1:-1]
-                self._execute_adb_command(device_id, "shell", "input", "text", text)
-                observation = {'action': 'text', 'text': text, 'success': True}
-                
-            elif action_type == 'key':
+                safe_text = text.replace(" ", "%s")
+                self._execute_adb_command(device_id, "shell", "input", "text", safe_text)
+                observation = {"action": "text", "text": text, "success": True}
+
+            # ---- key ----
+            elif action_type == "key":
                 if len(parts) >= 2:
                     key = parts[1].lower()
                     key_code = self._get_key_code(key)
                     self._execute_adb_command(device_id, "shell", "input", "keyevent", key_code)
-                    observation = {'action': 'key', 'key': key, 'success': True}
+                    observation = {"action": "key", "key": key, "success": True}
                 else:
-                    return {'success': False, 'error': '按键命令格式无效'}
-                
-            elif action_type == 'screenshot':
-                # 获取屏幕截图
+                    return {"success": False, "error": "按键命令格式无效，应为: key <key_name>"}
+
+            # ---- screenshot ----
+            elif action_type == "screenshot":
                 screenshot_data = self._take_screenshot(device_id)
-                observation = {'action': 'screenshot', 'image': screenshot_data, 'success': True}
-                
+                observation = {"action": "screenshot", "image": screenshot_data, "success": True}
+
             else:
-                return {'success': False, 'error': f'未知的动作类型: {action_type}'}
-            
-            # 更新模拟器状态
-            emulator_info['last_action'] = action
-            emulator_info['last_action_time'] = time.time()
-            
-            # 获取额外的观察信息
-            extra_observation = self._get_extra_observation(device_id)
-            observation.update(extra_observation)
-            
-            return {
-                'success': True,
-                'observation': observation
-            }
-            
-        except Exception as e:
+                return {"success": False, "error": f"未知的动作类型: {action_type}"}
+
+            # --------------------------------------------------
+            # 更新模拟器状态 & 额外观察信息
+            # --------------------------------------------------
+            emulator_info["last_action"] = action
+            emulator_info["last_action_time"] = time.time()
+            observation.update(self._get_extra_observation(device_id))
+
+            return {"success": True, "observation": observation}
+
+        except Exception as e:  # noqa: BLE001
             logger.error(f"在 Android 模拟器中执行动作失败: {e}")
-            return {
-                'success': False,
-                'error': str(e)
-            }
+            return {"success": False, "error": str(e)}
     
     def _get_key_code(self, key: str) -> str:
         """将关键字转换为 Android 键代码"""

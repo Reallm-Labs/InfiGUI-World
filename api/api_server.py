@@ -39,6 +39,9 @@ class ApiServer:
         self.app.route('/api/env/step', methods=['POST'])(self.step_env)
         self.app.route('/api/env/remove', methods=['POST'])(self.remove_env)
 
+        # 列出支持的动作类型（便于前端构建动态表单）
+        self.app.route('/api/env/actions')(self.list_env_actions)
+
         # Reward related interface
         self.app.route('/api/reward/calculate', methods=['POST'])(self.calculate_reward)
 
@@ -160,12 +163,21 @@ class ApiServer:
         return jsonify(result)
     
     def step_env(self):
-        data = request.json
+        data = request.json or {}
         trajectory_id = data.get('trajectory_id')
-        command = data.get('command')
-        
-        if not trajectory_id or not command:
-            return jsonify({'success': False, 'error': '缺少 trajectory_id 或 command'}), 400
+
+        # 支持多种动作表示：
+        # 1) legacy "command" 字符串，如 "click 100 200"
+        # 2) "command" dict / JSON，直接映射 android_world.env.json_action.JSONAction
+        # 3) 新增 "action" 字段，效果同 "command"，便于前端语义化调用
+        command = data.get('command') if 'command' in data else None
+        if command is None:
+            command = data.get('action')  # allow alias
+        print('Cur action is:', command)
+
+        # null/empty guard
+        if trajectory_id is None or command is None:
+            return jsonify({'success': False, 'error': '缺少 trajectory_id 或 action/command'}), 400
         
         env_worker = None
         for worker_id, worker in self.coordinator.workers.items():
@@ -176,6 +188,7 @@ class ApiServer:
         if not env_worker:
             return jsonify({'success': False, 'error': '未找到环境 Worker'}), 404
         
+        # 直接把 command 原样传递，底层 Environment 会自行解析（DSL 或 JSONAction）。
         result = env_worker.handle_request({
             'action': 'step',
             'trajectory_id': trajectory_id,
@@ -232,3 +245,13 @@ class ApiServer:
             'trajectory_data': trajectory_data
         })
         return jsonify(result)
+
+    def list_env_actions(self):
+        """返回后端当前支持的 JSONAction 类型列表。"""
+        try:
+            from android_world.env import json_action as ja  # type: ignore
+            actions = list(getattr(ja, '_ACTION_TYPES', []))
+            return jsonify({'success': True, 'actions': actions})
+        except Exception as exc:  # pragma: no cover
+            logger.warning(f'Failed to fetch action list: {exc}')
+            return jsonify({'success': False, 'error': str(exc)}), 500
