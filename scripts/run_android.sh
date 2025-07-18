@@ -5,10 +5,13 @@ set -e
 NAME=android-emulator          # -n 容器名
 ADB_PORT=5037                  # -p ADB 端口
 AVD_NAME=Pixel6_API33          # -d AVD 名称
+EMU_PORT=5554                 # -e 模拟器 console 端口 (偶数)
+READ_ONLY=1                   # -R 默认使用 read-only 方案，允许并发打开同一 AVD
 DISABLE_KVM=0                  # -k 置位后关闭 KVM
-HOST_SHARE_DIR="$PWD/share"    # -s 宿主机要挂进去的目录
+HOST_SHARE_DIR="/root/share"    # -s 宿主机要挂进去的目录
+ENROOT_BASE=""                  # -o enroot 数据根目录 (可选)
 CONT_SHARE_DIR="/mnt/share"    # -c 容器内目标目录
-IMG=android-emulator.sqsh
+IMG=../android-emulator.sqsh
 AVD_DIR="$CONT_SHARE_DIR/.android"   # -a 自定义 AVD 数据目录
 
 usage() {
@@ -17,6 +20,9 @@ usage() {
   -n NAME     容器名 (默认: android-emulator)
   -p PORT     ADB 端口 (默认: 5037)
   -d AVD      AVD 名称 (默认: Pixel6_API33)
+  -e PORT     模拟器 console 端口 (偶数，默认 5554)
+  -o DIR      自定义 enroot 数据目录 (data/cache/runtime 均映射到 DIR)
+  -R          不加 -read-only (默认加)
   -k          关闭 KVM 直通 (软件加速)
   -s DIR      宿主机要挂载的目录 (默认: \$PWD/share)
   -c DIR      容器内挂载点 (默认: /mnt/share)
@@ -25,16 +31,19 @@ usage() {
 EOF
 }
 
-while getopts "n:p:d:ks:c:a:h" opt; do
+while getopts "n:p:d:e:ks:c:a:o:hR" opt; do
   case $opt in
     n) NAME=$OPTARG ;;
     p) ADB_PORT=$OPTARG ;;
     d) AVD_NAME=$OPTARG ;;
     k) DISABLE_KVM=1 ;;
+    e) EMU_PORT=$OPTARG ;;
     s) HOST_SHARE_DIR=$OPTARG ;;
+    o) ENROOT_BASE=$OPTARG ;;
     c) CONT_SHARE_DIR=$OPTARG ;;
     a) AVD_DIR=$OPTARG ;;
     h) usage; exit 0 ;;
+    R) READ_ONLY=0 ;;   # 关闭 read-only
     *) usage; exit 1 ;;
   esac
 done
@@ -55,6 +64,15 @@ fi
 
 SHARE_MOUNT_OPT="--mount ${HOST_SHARE_DIR}:${CONT_SHARE_DIR}"
 ANDROID_ENV_OPT="--env ANDROID_SDK_HOME=${AVD_DIR} --env ANDROID_AVD_HOME=${AVD_DIR}/avd"
+
+# ───────────── enroot 数据目录重定向（可选）─────────────
+if [[ -n "$ENROOT_BASE" ]]; then
+  export ENROOT_DATA_PATH="${ENROOT_BASE}/data"
+  export ENROOT_CACHE_PATH="${ENROOT_BASE}/cache"
+  export ENROOT_RUNTIME_PATH="${ENROOT_BASE}/runtime"
+  mkdir -p "$ENROOT_DATA_PATH" "$ENROOT_CACHE_PATH" "$ENROOT_RUNTIME_PATH"
+  echo "➡️  使用自定义 enroot 路径: $ENROOT_BASE"
+fi
 
 # ───────────── 第一次 create（若不存在）─────────────
 if ! enroot list -a | grep -q "^${NAME}\$"; then
@@ -86,7 +104,11 @@ enroot start \
     # 启动 ADB & Emulator
     adb start-server
     echo '✅ ADB 已启动；模拟器即将启动'
-    emulator -avd $AVD_NAME -no-snapshot -no-boot-anim -no-window $EMU_ACCEL_OPT &
+    RO_OPT=""
+    if [[ $READ_ONLY -eq 1 ]]; then
+      RO_OPT="-read-only"
+    fi
+    emulator -avd $AVD_NAME -port $EMU_PORT -grpc $((EMU_PORT+1000)) $RO_OPT -no-snapshot -no-boot-anim -no-window $EMU_ACCEL_OPT &
     echo '✅ 模拟器已启动，宿主机目录已挂载到 ${CONT_SHARE_DIR}'
     exec bash
   "

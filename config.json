@@ -13,7 +13,8 @@
       "debug": true,
       "no_window": true,
       "no_audio": true,
-      "no_boot_anim": true
+      "no_boot_anim": true,
+      "emulator_log_dir": "/root/android_sandbox/emulator_logs"
     }
   },
   "worker": {

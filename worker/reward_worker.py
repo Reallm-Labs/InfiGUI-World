@@ -1,5 +1,7 @@
 import time
 import json
+import os
+import subprocess
 from typing import Dict, Any, List, Optional
 from worker.base import Worker
 from utils.logging import setup_logger
@@ -13,9 +15,16 @@ class RewardWorker(Worker):
     
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
+
+        # ---- ADB 相关配置 ----
+        self.adb_path: str = config.get("adb_path", "/root/Android/Sdk/platform-tools/adb")
+        # AndroidEnvironment 默认快照目录 – 用于根据 trajectory_id 找到 device_id
+        self.snapshot_dir: str = config.get("snapshot_dir", "/tmp/android_snapshots")
+
+        # 兼容旧的 reward 逻辑（保留）
         self.reward_functions = self._load_reward_functions(config)
-        self.cache = {}  # 缓存之前计算的结果
-    
+        self.cache: Dict[str, Any] = {}
+
     def _load_reward_functions(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """加载奖励函数"""
         # 在实际应用中，可能会从配置文件或者模型中加载奖励函数
@@ -56,6 +65,26 @@ class RewardWorker(Worker):
             return {'success': False, 'error': 'Missing action'}
         
         try:
+
+            # ------------------------------------------------------------------
+            # 1) 新增 – ADB 执行逻辑
+            # ------------------------------------------------------------------
+            if action in ("execute_adb",) or (action == "calculate_reward" and request.get("adb_command")):
+                trajectory_id = request.get("trajectory_id")
+                adb_command = request.get("adb_command")
+
+                if not trajectory_id or not adb_command:
+                    return {"success": False, "error": "Missing trajectory_id or adb_command"}
+
+                device_id = request.get("device_id") or self._resolve_device_id(trajectory_id)
+                if not device_id:
+                    return {"success": False, "error": "Cannot resolve device_id for given trajectory_id"}
+
+                return self._execute_adb_helper(device_id, adb_command)
+
+            # ------------------------------------------------------------------
+            # 2) 兼容旧的奖励计算逻辑（如仍需要）
+            # ------------------------------------------------------------------
             if action == 'calculate_reward':
                 reward_type = request.get('reward_type', 'rule_based')
                 trajectory_id = request.get('trajectory_id')
@@ -213,3 +242,41 @@ class RewardWorker(Worker):
         except Exception as e:
             logger.error(f"Error in rule_based_reward: {e}")
             return {'success': False, 'error': str(e)}
+
+    # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
+
+    def _resolve_device_id(self, trajectory_id: str) -> Optional[str]:
+        """尝试通过快照元数据解析出 emulator device_id。"""
+        meta_path = os.path.join(self.snapshot_dir, f"{trajectory_id}.json")
+        if not os.path.exists(meta_path):
+            return None
+        try:
+            with open(meta_path, "r") as f:
+                meta = json.load(f)
+            return meta.get("device_id")
+        except Exception as exc:  # pragma: no cover
+            logger.warning(f"Failed to parse snapshot meta {meta_path}: {exc}")
+            return None
+
+    def _execute_adb_helper(self, device_id: str, adb_command: List[str] | str) -> Dict[str, Any]:
+        """实际执行 adb 并返回结果。"""
+        cmd_list: List[str]
+        if isinstance(adb_command, str):
+            cmd_list = adb_command.split()
+        else:
+            cmd_list = adb_command
+
+        full_cmd = [self.adb_path, "-s", device_id] + cmd_list
+        try:
+            result = subprocess.run(full_cmd, capture_output=True, text=True, check=False)
+            return {
+                "success": result.returncode == 0,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "returncode": result.returncode,
+                "executed_cmd": " ".join(full_cmd),
+            }
+        except Exception as exc:
+            return {"success": False, "error": str(exc)}

@@ -6,6 +6,7 @@ import json
 import base64
 import re
 import shutil
+import threading
 from typing import Dict, Any, Optional, List, Tuple
 from environment.base import Environment
 from utils.logging import setup_logger
@@ -21,6 +22,139 @@ class AndroidEnvironment(Environment):
     """
     Android环境实现，通过ADB与Android模拟器交互
     """
+    
+    # ------------------------------------------------------------------
+    # Helper: ensure AVD exists locally – create it on-the-fly if absent
+    # ------------------------------------------------------------------
+    def _ensure_avd_exists(self):
+        """若 avd 不存在，使用 avdmanager 自动创建。"""
+        avd_home = os.environ.get("ANDROID_AVD_HOME") or os.path.join(os.path.expanduser("~"), ".android", "avd")
+        avd_path = os.path.join(avd_home, f"{self.avd_name}.avd")
+
+        if os.path.exists(avd_path):
+            return  # 已存在
+
+        logger.info(f"检测到 AVD '{self.avd_name}' 不存在，尝试自动创建…")
+
+        # 尝试定位 avdmanager
+        avdmanager_candidates: List[str] = []
+        # 1) 显式配置
+        if hasattr(self, "config") and self.config.get("avdmanager_path"):
+            avdmanager_candidates.append(self.config["avdmanager_path"])
+
+        # 2) 相对 emulator_path 推导
+        try:
+            sdk_root = os.path.abspath(os.path.join(self.emulator_path, os.pardir, os.pardir))
+            avdmanager_candidates.append(os.path.join(sdk_root, "cmdline-tools", "latest", "bin", "avdmanager"))
+            avdmanager_candidates.append(os.path.join(sdk_root, "tools", "bin", "avdmanager"))
+        except Exception:
+            pass
+
+        # 3) PATH 中
+        avdmanager_candidates.append("avdmanager")
+
+        avdmanager_path = None
+        for cand in avdmanager_candidates:
+            if cand and (os.path.exists(cand) or shutil.which(cand)):
+                avdmanager_path = cand if os.path.isabs(cand) else shutil.which(cand)
+                break
+
+        if not avdmanager_path:
+            logger.error("未找到 avdmanager，可在 config['avdmanager_path'] 指定路径")
+            raise RuntimeError("无法创建 AVD：未找到 avdmanager")
+
+        # 默认 system-image – 可由 config 覆盖
+        system_image = (
+            self.config.get("system_image") if hasattr(self, "config") else None
+        ) or "system-images;android-33;google_apis;x86_64"
+
+        device_name = (
+            self.config.get("device_name") if hasattr(self, "config") else None
+        ) or "pixel_6"
+
+        # 创建命令
+        create_cmd = [
+            avdmanager_path,
+            "create",
+            "avd",
+            "-n",
+            self.avd_name,
+            "-k",
+            system_image,
+            "-d",
+            device_name,
+            "-c",
+            "256M",
+            "--force",
+        ]
+
+        try:
+            logger.info("创建 AVD 命令: %s", " ".join(create_cmd))
+            subprocess.run(create_cmd, check=True, input="no\n", text=True)  # --force 仍可能询问 overwrite，输入 no
+            logger.info("AVD '%s' 创建成功", self.avd_name)
+        except subprocess.CalledProcessError as e:
+            logger.error("自动创建 AVD 失败: %s", e)
+            raise RuntimeError("自动创建 AVD 失败")
+    
+    # ------------------------------------------------------------------
+    # Cross-process claim helpers – prevent multiple workers attaching
+    # ------------------------------------------------------------------
+    _CLAIM_DIR = "/tmp/android_env_emulator_claims"
+
+    def _try_claim_device(self, device_id: str) -> bool:
+        """Attempt to atomically claim an emulator so that only one worker uses it.
+        Return True if claim succeeds, False otherwise."""
+        try:
+            os.makedirs(self._CLAIM_DIR, exist_ok=True)
+            lock_path = os.path.join(self._CLAIM_DIR, f"{device_id}.lock")
+            # Use os.O_CREAT|os.O_EXCL for atomic create
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
+            return True
+        except FileExistsError:
+            return False
+        except Exception:
+            return False
+
+    def _release_claim(self, device_id: str):
+        """Release the claim for a device (called when we stop/remove the emulator)."""
+        try:
+            lock_path = os.path.join(self._CLAIM_DIR, f"{device_id}.lock")
+            if os.path.exists(lock_path):
+                os.remove(lock_path)
+        except Exception:
+            pass
+    
+    # ------------------------------------------------------------------
+    # Helper: find an already running emulator that is not yet managed
+    # ------------------------------------------------------------------
+    def _find_existing_emulator(self) -> Optional[Tuple[str, int]]:
+        """Return (device_id, console_port) of a running emulator we do not yet manage."""
+        try:
+            result = subprocess.run(
+                [self.adb_path, "devices"], capture_output=True, text=True, check=True
+            )
+            for line in result.stdout.splitlines():
+                if line.startswith("emulator-") and "device" in line:
+                    try:
+                        adb_port = int(line.split("\t")[0].split("-")[1])
+                        console_port = adb_port - 1
+                        device_id = f"emulator-{adb_port}"
+                        # Skip ones we already track
+                        if any(
+                            emu.get("device_id") == device_id for emu in self.active_emulators.values()
+                        ):
+                            continue
+                        # cross-process claim check
+                        if self._try_claim_device(device_id):
+                            return device_id, console_port
+                        else:
+                            continue
+                    except Exception:
+                        continue
+        except Exception:
+            pass
+        return None
     
     def __init__(self, config: Dict[str, Any]):
         super().__init__(config)
@@ -49,7 +183,11 @@ class AndroidEnvironment(Environment):
         # ---- 动态查找 adb 可执行文件 ----
         #（adb 的初始值已在上方设定，这里复用并在后续段落检查是否存在）
         self.avd_name = config.get('avd_name', 'Pixel6_API33')  # 默认使用 Pixel6 API33 模拟器
-        self.active_emulators = {}  # trajectory_id -> emulator_info
+        # trajectory_id -> emulator_info  (populated dynamically)
+        self.active_emulators: Dict[str, Dict[str, Any]] = {}
+
+        # 锁用于并发情况下的端口分配，避免冲突。
+        self._port_lock = threading.Lock()
         
         # 额外的配置参数
         self.base_port = config.get('base_port', 5554)  # 模拟器基础端口
@@ -109,56 +247,101 @@ class AndroidEnvironment(Environment):
         """获取可用的端口对（控制台端口和 ADB 端口）"""
         base_port = self.base_port
         
-        # 查找已经使用的端口
-        used_ports = set()
+        # 查找已经使用的端口（① 本进程已启动的 emulator ② adb devices 中已存在的 emulator）
+        used_ports: set[int] = set()
+
+        # ① 当前 Environment 启动的实例
         for emulator_info in self.active_emulators.values():
-            if 'port' in emulator_info:
-                used_ports.add(emulator_info['port'])
+            port_val = emulator_info.get('port')
+            if port_val is not None:
+                used_ports.add(port_val)
+                used_ports.add(port_val + 1)  # adb 端口
+
+        # ② 系统中其它 emulator – 解析 adb devices 输出
+        try:
+            adb_list = subprocess.run(
+                [self.adb_path, "devices"], capture_output=True, text=True, check=True
+            )
+            for line in adb_list.stdout.splitlines():
+                if line.startswith("emulator-"):
+                    try:
+                        adb_port = int(line.split("\t")[0].split("-")[1])
+                        console_port = adb_port - 1
+                        used_ports.add(console_port)
+                        used_ports.add(adb_port)
+                    except Exception:
+                        pass
+        except Exception:
+            # adb 可能暂未启动，忽略即可
+            pass
         
-        # 找到第一个可用的偶数端口
-        port = base_port
+        # 端口必须是偶数 (emulator console 端口)，adb 端口为 console+1
+        port = base_port if base_port % 2 == 0 else base_port + 1
+
         while port in used_ports:
-            port += 2
-            
+            port += 2  # 依次尝试下一个偶数端口
+
         return port, port + 1
     
     def _start_emulator(self, trajectory_id: str, port: int) -> Dict[str, Any]:
         """启动模拟器并等待它准备好接收命令"""
-        device_id = f"emulator-{port}"
+        # 确保 AVD 存在
+        try:
+            self._ensure_avd_exists()
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+        adb_port = port + 1
+        device_id = f"emulator-{adb_port}"
         snapshot_name = f"sandbox_{trajectory_id[:8]}"
         
         logger.info(f"启动 Android 模拟器，端口: {port}，AVD: {self.avd_name}")
         
-        # # 构建启动命令
-        # cmd = [
-        #     self.emulator_path,
-        #     "-avd", self.avd_name,
-        #     "-port", str(port),
-        #     "-no-boot-anim",  # 不显示启动动画
-        #     "-no-audio",      # 禁用音频
-        #     "-no-window"      # 无窗口模式
-        # ]
-        
-        # # 如果需要创建快照，添加相关参数
-        # cmd.extend(["-snapshot", snapshot_name])
+        # ---------------- 构建启动命令 -----------------
+        cfg = getattr(self, "config", {})  # 从传入配置读取额外开关
 
-        # need use shell mode to run and export env
-        cmd = f"{self.emulator_path} -avd {self.avd_name} -port {port} -no-boot-anim -no-audio -no-window"
-        cmd += f" --snapshot {snapshot_name}"
+        cmd = [self.emulator_path, "-avd", self.avd_name, "-port", str(port)]
+
+        # gRPC 端口（方便后续调试/集成）
+        cmd.extend(["-grpc", str(port + 1000)])
+
+        # 启动选项按 config 开关附加（默认为 True）
+        if cfg.get("no_window", True):
+            cmd.append("-no-window")
+        if cfg.get("no_audio", True):
+            cmd.append("-no-audio")
+        if cfg.get("no_boot_anim", True):
+            cmd.append("-no-boot-anim")
+
+        # 只在需要独占写入时用 -wipe-data，否则默认 -read-only 允许多实例并发
+        if cfg.get("wipe_data", False):
+            cmd.append("-wipe-data")
+        else:
+            # read_only 默认为 True，可通过 config 关闭
+            if cfg.get("read_only", True):
+                cmd.append("-read-only")
+
+        # 不保存/加载快照（外部另外管理）
+        if cfg.get("no_snapshot", True):
+            cmd.append("-no-snapshot")
+
+        # 加速开关：on/off，默认为 on
+        accel_flag = cfg.get("accel", "on")
+        cmd.extend(["-accel", accel_flag])
         
         try:
-            # 启动模拟器进程
-            print("create emulator cmd in Popen:", cmd)
-            emulator_process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                shell=True
-            )
-            
-            print("stdout of emulator process:", emulator_process.stdout.read())
-            print("stderr of emulator process:", emulator_process.stderr.read())
+            logger.info("启动命令: %s", " ".join(cmd))
 
+            # 将 emulator 输出写入独立日志文件，方便调试
+            print(self.config.get('emulator_log_dir', '/tmp'))
+            log_dir = self.config.get('emulator_log_dir', '/tmp') if hasattr(self, 'config') else '/tmp'
+            os.makedirs(log_dir, exist_ok=True)
+            log_file_path = os.path.join(log_dir, f"emulator_{trajectory_id[:8]}.log")
+            log_file_handle = open(log_file_path, 'w')
+            logger.info(f"Emulator stdout/stderr → {log_file_path}")
+
+            # 捕获输出到文件；如需在终端实时查看可使用 tail -f
+            emulator_process = subprocess.Popen(cmd, stdout=log_file_handle, stderr=log_file_handle)
+            
             # import pdb; pdb.set_trace()
             
             # 等待模拟器启动
@@ -168,33 +351,28 @@ class AndroidEnvironment(Environment):
             while time.time() - start_time < self.boot_timeout:
                 try:
                     # 检查设备是否在线
-                    cmd = f"{self.adb_path} devices"
-                    print("check device online cmd:", cmd)
                     result = subprocess.run(
-                        cmd,
+                        [self.adb_path, "devices"],
                         check=True,
                         capture_output=True,
                         text=True,
-                        shell=True
                     )
                     
                     if device_id in result.stdout:
                         # 检查设备是否已经完全启动
-                        print("emulator id:", device_id)
-                        cmd = f"{self.adb_path} -s {device_id} shell getprop sys.boot_completed"
-                        print("check device boot completed cmd:", cmd)
                         boot_completed = subprocess.run(
-                            cmd,
+                            [self.adb_path, "-s", device_id, "shell", "getprop", "sys.boot_completed"],
                             check=True,
                             capture_output=True,
                             text=True,
-                            shell=True
                         )
                         
                         if "1" in boot_completed.stdout:
                             device_ready = True
                             break
                     
+                    elapsed = int(time.time() - start_time)
+                    logger.info(f"等待模拟器启动中… 已用 {elapsed}s (device_id={device_id})")
                     time.sleep(5)
                 except Exception as e:
                     logger.warning(f"等待模拟器启动时出错: {e}")
@@ -203,6 +381,10 @@ class AndroidEnvironment(Environment):
             if not device_ready:
                 # 超时，终止模拟器进程
                 emulator_process.terminate()
+                try:
+                    log_file_handle.close()
+                except Exception:
+                    pass
                 try:
                     emulator_process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
@@ -216,6 +398,15 @@ class AndroidEnvironment(Environment):
             # 解锁屏幕
             self._unlock_screen(device_id)
             
+            # 创建 baseline snapshot（若需要）
+            self._ensure_baseline_snapshot(device_id)
+            
+            # 关闭日志文件句柄，避免文件描述符泄漏
+            try:
+                log_file_handle.flush()
+            except Exception:
+                pass
+
             return {
                 'success': True,
                 'device_id': device_id,
@@ -407,17 +598,51 @@ class AndroidEnvironment(Environment):
         return None
     
     def create(self) -> Dict[str, Any]:
-        """创建一个新的Android模拟器实例"""
+        """创建一个新的Android模拟器实例；若已存在空闲 emulator 则直接复用"""
         trajectory_id = str(uuid.uuid4())
+
+        # --------------------------------------------------------------
+        # 0) 尝试复用已经存在且尚未被管理的 emulator
+        # --------------------------------------------------------------
+        existing = self._find_existing_emulator()
+        if existing:
+            device_id, console_port = existing
+            logger.info(f"复用已启动的 emulator {device_id} (console {console_port})")
+            self.active_emulators[trajectory_id] = {
+                "device_id": device_id,
+                "port": console_port,
+                "process": None,  # 无法取得外部进程句柄
+                "snapshot_name": f"sandbox_{trajectory_id[:8]}",
+                "status": "running",
+                "created_time": time.time(),
+            }
+            return {"success": True, "trajectory_id": trajectory_id, "device_id": device_id}
+
+        # --------------------------------------------------------------
+        # 1) 如无可复用实例，再自行启动新 emulator
+        # --------------------------------------------------------------
         
         try:
-            # 获取可用端口
-            port, adb_port = self._get_free_port_pair()
+            # -------- 端口分配：加锁保证并发安全 --------
+            with self._port_lock:
+                port, adb_port = self._get_free_port_pair()  # port 为 console，adb_port 为 port+1
+                # 预先占位，防止其他线程选到同一端口
+                self.active_emulators[trajectory_id] = {
+                    'device_id': f'emulator-{adb_port}',  # 使用 adb 端口
+                    'port': port,
+                    'process': None,
+                    'snapshot_name': f'sandbox_{trajectory_id[:8]}',
+                    'status': 'starting',
+                    'created_time': time.time()
+                }
             
             # 启动模拟器
             result = self._start_emulator(trajectory_id, port)
             
             if not result['success']:
+                # 若启动失败，清理占位条目
+                if trajectory_id in self.active_emulators:
+                    self.active_emulators.pop(trajectory_id, None)
                 return {
                     'success': False,
                     'error': result['error']
@@ -425,15 +650,13 @@ class AndroidEnvironment(Environment):
             
             device_id = result['device_id']
             
-            # 记录模拟器信息
-            self.active_emulators[trajectory_id] = {
+            # 更新模拟器信息（先前已占位）
+            self.active_emulators[trajectory_id].update({
                 'device_id': device_id,
-                'port': port,
                 'process': result['process'],
                 'snapshot_name': result['snapshot_name'],
-                'status': 'running',
-                'created_time': time.time()
-            }
+                'status': 'running'
+            })
             
             return {
                 'success': True,
@@ -442,6 +665,9 @@ class AndroidEnvironment(Environment):
             }
             
         except Exception as e:
+            # 若启动失败，清理占位条目
+            if trajectory_id in self.active_emulators:
+                self.active_emulators.pop(trajectory_id, None)
             logger.error(f"创建 Android 模拟器失败: {e}")
             return {
                 'success': False,
@@ -543,7 +769,7 @@ class AndroidEnvironment(Environment):
             )
             
             # 等待模拟器启动
-            device_id = f"emulator-{port}"
+            device_id = f"emulator-{port + 1}"
             start_time = time.time()
             device_ready = False
             
@@ -876,6 +1102,8 @@ class AndroidEnvironment(Environment):
                 # 停止模拟器
                 if emulator_info['status'] == 'running':
                     self._stop_emulator(device_id)
+                # 释放跨进程锁
+                self._release_claim(device_id)
                 
                 # 如果有进程引用，尝试终止
                 if 'process' in emulator_info and emulator_info['process']:
@@ -943,3 +1171,52 @@ class AndroidEnvironment(Environment):
             logger.error(f"获取额外观察信息失败: {e}")
         
         return result
+
+    # ------------------------------------------------------------------
+    # Baseline snapshot helpers – fast reset between rollouts
+    # ------------------------------------------------------------------
+    _BASELINE_SNAPSHOT = "baseline_clean"
+
+    def _ensure_baseline_snapshot(self, device_id: str):
+        """Create a baseline snapshot inside the running emulator if it does not yet exist."""
+        try:
+            # Try to load – if succeed, nothing to do
+            r = self._execute_adb_command(device_id, "emu", "avd", "snapshot", "load", self._BASELINE_SNAPSHOT)
+            # If load worked we immediately quit
+            if "KO:" not in r.stdout:
+                return
+        except Exception:
+            pass  # load failed, so snapshot likely missing – we'll create below
+        try:
+            self._execute_adb_command(device_id, "emu", "avd", "snapshot", "save", self._BASELINE_SNAPSHOT)
+            logger.info(f"Baseline snapshot '{self._BASELINE_SNAPSHOT}' created for {device_id}")
+        except Exception as e:
+            logger.warning(f"无法创建 baseline snapshot: {e}")
+
+    def reset(self, trajectory_id: str) -> Dict[str, Any]:
+        """Fast-reset emulator to the baseline snapshot; fallback to HOME+clear if snapshot missing."""
+        if trajectory_id not in self.active_emulators:
+            return {"success": False, "error": f"未知的 trajectory_id: {trajectory_id}"}
+        emulator_info = self.active_emulators[trajectory_id]
+        device_id = emulator_info["device_id"]
+        try:
+            # 尝试加载 baseline snapshot
+            load_ok = False
+            try:
+                r = self._execute_adb_command(device_id, "emu", "avd", "snapshot", "load", self._BASELINE_SNAPSHOT)
+                if "OK" in r.stdout:
+                    load_ok = True
+            except Exception:
+                load_ok = False
+            if not load_ok:
+                # Snapshot 不存在 – 退化为模拟按 HOME & 清后台
+                logger.info(f"baseline snapshot 不存在，使用按键方式重置 {device_id}")
+                self._execute_adb_command(device_id, "shell", "input", "keyevent", "KEYCODE_HOME")
+                # 清理最近应用，可能需要 root；这里简单按两次最近任务
+                self._execute_adb_command(device_id, "shell", "input", "keyevent", "KEYCODE_APP_SWITCH")
+                time.sleep(0.2)
+                self._execute_adb_command(device_id, "shell", "input", "keyevent", "KEYCODE_HOME")
+            return {"success": True}
+        except Exception as e:
+            logger.error(f"reset 失败: {e}")
+            return {"success": False, "error": str(e)}
